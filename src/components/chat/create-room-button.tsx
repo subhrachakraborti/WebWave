@@ -37,7 +37,7 @@ export function CreateRoomButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -65,6 +65,7 @@ export function CreateRoomButton() {
   }
 
   const handleTriggerClick = () => {
+    if (authLoading) return; // Do nothing if auth state is still loading
     if (!user) {
       toast({
         variant: 'destructive',
@@ -79,8 +80,8 @@ export function CreateRoomButton() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full" onClick={handleTriggerClick}>
-          <MessageSquarePlus className="mr-2 h-5 w-5" />
+        <Button className="w-full" onClick={handleTriggerClick} disabled={authLoading}>
+           {authLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageSquarePlus className="mr-2 h-5 w-5" />}
           Create New Room
         </Button>
       </DialogTrigger>
