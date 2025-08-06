@@ -2,7 +2,6 @@
 import 'server-only';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
 import { cookies } from 'next/headers';
 import "dotenv/config";
 
@@ -14,20 +13,32 @@ const firebaseAdminConfig = {
 
 let adminApp: App;
 
-if (getApps().length === 0) {
+const apps = getApps();
+if (apps.length === 0) {
   if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
     adminApp = initializeApp({
       credential: cert(firebaseAdminConfig)
     }, 'admin');
   } else {
-    console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
+    // This case will result in an error if getAuthenticatedUser is called.
+    // It's a configuration issue that needs to be resolved by the developer.
+    console.error("Firebase Admin SDK not initialized. Missing environment variables.");
+    // To prevent a hard crash, we create a placeholder. The app will fail gracefully
+    // when auth is attempted.
+    adminApp = {} as App; 
   }
 } else {
-  adminApp = getApps().find(app => app.name === 'admin')!;
+  adminApp = apps.find(app => app.name === 'admin')!;
 }
 
 
 export async function getAuthenticatedUser() {
+  // Ensure the app is initialized before trying to use it.
+  if (!adminApp.name) {
+    console.error("Firebase Admin not available. Cannot authenticate user.");
+    return null;
+  }
+  
   const auth = getAuth(adminApp);
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('session')?.value;
@@ -47,5 +58,4 @@ export async function getAuthenticatedUser() {
   }
 }
 
-const db = getFirestore(adminApp);
-export { adminApp, db };
+export { adminApp };
