@@ -4,6 +4,10 @@ import {getFirebaseAdminApp} from './lib/firebase/server';
 
 const PROTECTED_PATHS = ['/dashboard'];
 
+// This forces the middleware to run on the Node.js runtime.
+// https://nextjs.org/docs/app/api-reference/file-conventions/middleware#runtime
+export const runtime = 'nodejs';
+
 getFirebaseAdminApp();
 
 function isPathProtected(path: string) {
@@ -25,6 +29,8 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
+      // Initialize Firebase Admin App if not already initialized
+      getFirebaseAdminApp();
       await getAuth().verifySessionCookie(sessionCookie, true);
     } catch (error) {
       console.error('Session cookie verification failed:', error);
@@ -35,3 +41,8 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+export const config = {
+  matcher: '/dashboard/:path*',
+};
