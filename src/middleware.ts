@@ -2,6 +2,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/firebase/server';
 
+export const runtime = 'nodejs';
+
 export const config = {
   matcher: ['/dashboard/:path*'],
 };
