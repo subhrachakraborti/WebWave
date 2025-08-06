@@ -13,32 +13,20 @@ const firebaseAdminConfig = {
 
 let adminApp: App;
 
-const apps = getApps();
-if (apps.length === 0) {
+if (getApps().length === 0) {
   if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
     adminApp = initializeApp({
       credential: cert(firebaseAdminConfig)
     }, 'admin');
   } else {
-    // This case will result in an error if getAuthenticatedUser is called.
-    // It's a configuration issue that needs to be resolved by the developer.
-    console.error("Firebase Admin SDK not initialized. Missing environment variables.");
-    // To prevent a hard crash, we create a placeholder. The app will fail gracefully
-    // when auth is attempted.
-    adminApp = {} as App; 
+    console.error("Firebase Admin SDK credentials are not set. The app will not be able to authenticate users on the server.");
   }
 } else {
-  adminApp = apps.find(app => app.name === 'admin')!;
+  adminApp = getApps().find(app => app.name === 'admin')!;
 }
 
 
 export async function getAuthenticatedUser() {
-  // Ensure the app is initialized before trying to use it.
-  if (!adminApp.name) {
-    console.error("Firebase Admin not available. Cannot authenticate user.");
-    return null;
-  }
-  
   const auth = getAuth(adminApp);
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('session')?.value;
@@ -52,7 +40,6 @@ export async function getAuthenticatedUser() {
     return decodedClaims;
   } catch (error) {
     console.error('Error verifying session cookie:', error);
-    // Clear the invalid cookie
     cookies().delete('session');
     return null;
   }
