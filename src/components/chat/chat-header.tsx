@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Chatroom } from '@/lib/types';
@@ -18,6 +19,7 @@ import { Button } from '../ui/button';
 import { deleteChatroom } from '@/lib/actions/chat';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ChatHeaderProps {
   chatroom: Chatroom;
@@ -26,8 +28,9 @@ interface ChatHeaderProps {
 export default function ChatHeader({ chatroom }: ChatHeaderProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
-  const isCreator = chatroom.creatorId === 'anonymous_user';
+  const isCreator = user && chatroom.creatorId === user.uid;
 
   const handleDelete = async () => {
     const result = await deleteChatroom(chatroom.id);

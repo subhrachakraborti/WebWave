@@ -1,18 +1,25 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, orderBy, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Chatroom, Message } from '@/lib/types';
-
-const anonymousUserId = 'anonymous_user';
+import { useAuth } from './use-auth';
 
 export function useChatrooms() {
+  const { user } = useAuth();
   const [chatrooms, setChatrooms] = useState<Chatroom[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'chatrooms'), where('members', 'array-contains', anonymousUserId));
+    if (!user) {
+      setChatrooms([]);
+      setLoading(false);
+      return;
+    }
+
+    const q = query(collection(db, 'chatrooms'), where('members', 'array-contains', user.uid));
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const rooms = querySnapshot.docs.map(doc => ({
@@ -28,7 +35,7 @@ export function useChatrooms() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   return { chatrooms, loading };
 }

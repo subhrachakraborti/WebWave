@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -16,8 +17,10 @@ import { useToast } from '@/hooks/use-toast';
 import { createChatroom } from '@/lib/actions/chat';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 export function CreateRoomButton() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [roomName, setRoomName] = useState('');
@@ -26,6 +29,11 @@ export function CreateRoomButton() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to create a room.' });
+      return;
+    }
+
     if (roomName.trim().length < 3) {
       toast({ variant: 'destructive', title: 'Error', description: 'Room name must be at least 3 characters.' });
       return;

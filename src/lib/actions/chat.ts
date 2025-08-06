@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -16,6 +17,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
+import { getAuthenticatedUser } from '../firebase/server';
 
 function generateCode() {
   const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
@@ -26,18 +28,20 @@ function generateCode() {
   return result;
 }
 
-const anonymousUserId = 'anonymous_user';
-const anonymousUserName = 'Anonymous';
-
 export async function createChatroom(name: string) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { error: 'You must be logged in to create a chatroom.' };
+  }
+  
   const expirationDate = new Date();
   expirationDate.setMinutes(expirationDate.getMinutes() + 120);
 
   try {
     const newRoom = await addDoc(collection(db, 'chatrooms'), {
       name,
-      creatorId: anonymousUserId,
-      members: [anonymousUserId],
+      creatorId: user.uid,
+      members: [user.uid],
       code: generateCode(),
       createdAt: serverTimestamp(),
       expiresAt: expirationDate,
@@ -51,6 +55,11 @@ export async function createChatroom(name: string) {
 }
 
 export async function joinChatroom(code: string) {
+   const user = await getAuthenticatedUser();
+   if (!user) {
+     return { error: 'You must be logged in to join a chatroom.' };
+   }
+
   const q = query(collection(db, 'chatrooms'), where('code', '==', code));
   const querySnapshot = await getDocs(q);
 
@@ -69,12 +78,12 @@ export async function joinChatroom(code: string) {
     return { error: 'This chatroom is full.' };
   }
 
-  if (roomData.members.includes(anonymousUserId)) {
+  if (roomData.members.includes(user.uid)) {
      return { id: roomDoc.id }; // Already a member
   }
 
   await updateDoc(doc(db, 'chatrooms', roomDoc.id), {
-    members: arrayUnion(anonymousUserId),
+    members: arrayUnion(user.uid),
   });
 
   revalidatePath('/dashboard');
@@ -82,6 +91,11 @@ export async function joinChatroom(code: string) {
 }
 
 export async function sendMessage(chatroomId: string, message: { text: string; type: 'text' | 'image'; imageUrl?: string; }) {
+   const user = await getAuthenticatedUser();
+   if (!user) {
+     return { error: 'You must be logged in to send a message.' };
+   }
+
   if (!message.text && message.type === 'text') {
     return { error: 'Message cannot be empty.' };
   }
@@ -89,8 +103,8 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
   try {
     await addDoc(collection(db, 'chatrooms', chatroomId, 'messages'), {
       ...message,
-      senderId: anonymousUserId,
-      senderName: anonymousUserName,
+      senderId: user.uid,
+      senderName: user.name || 'Anonymous',
       timestamp: serverTimestamp(),
     });
     return { success: true };
@@ -100,11 +114,20 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
 }
 
 export async function deleteChatroom(chatroomId: string) {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+        return { error: 'Authentication required.' };
+    }
+
     const roomRef = doc(db, 'chatrooms', chatroomId);
     const roomSnap = await getDoc(roomRef);
 
     if (!roomSnap.exists()) {
         return { error: 'Room not found.' };
+    }
+
+    if (roomSnap.data().creatorId !== user.uid) {
+        return { error: 'Only the creator can delete this room.' };
     }
 
     try {

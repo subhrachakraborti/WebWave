@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -7,16 +8,16 @@ import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import UserAvatar from '../user-avatar';
 import { ScrollArea } from '../ui/scroll-area';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ChatMessagesProps {
   messages: Message[];
   loading: boolean;
 }
 
-const currentUserId = 'anonymous_user';
-
 export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -40,7 +41,7 @@ export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
           </div>
         ) : (
           messages.map((message) => {
-            const isCurrentUser = message.senderId === currentUserId;
+            const isCurrentUser = user && message.senderId === user.uid;
             return (
               <div
                 key={message.id}
