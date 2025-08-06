@@ -37,9 +37,17 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
-      await createSessionCookie(idToken);
-      // The onIdTokenChanged listener in useAuth will handle the redirect
+      const sessionResult = await createSessionCookie(idToken);
+      
+      if (sessionResult?.error) {
+        throw new Error(sessionResult.error);
+      }
+      
+      // The onIdTokenChanged listener in useAuth will eventually handle the redirect,
+      // but we can push eagerly to improve user experience.
+      router.push('/dashboard');
       toast({ title: 'Success', description: 'Logged in successfully.' });
+      
     } catch (error: any) {
       console.error(error);
       toast({

@@ -3,26 +3,32 @@
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
-import 'dotenv/config';
-
-const firebaseAdminConfig = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
 
 function getAdminApp(): App {
+  // Return the existing app if it has already been initialized
   if (getApps().some(app => app.name === 'admin')) {
     return getApps().find(app => app.name === 'admin')!;
   }
 
-  if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
+  // Get credentials from environment variables
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  // Check if all required credentials are available
+  if (privateKey && clientEmail && projectId) {
+    // Initialize the app
     return initializeApp({
-      credential: cert(firebaseAdminConfig)
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
     }, 'admin');
   }
 
-  throw new Error("Firebase Admin SDK credentials are not set. The app will not be able to authenticate users on the server.");
+  // Throw an error if credentials are not set
+  throw new Error("Firebase Admin SDK credentials are not set in environment variables. The app cannot authenticate users on the server.");
 }
 
 export function getAdminAuth() {
@@ -30,7 +36,6 @@ export function getAdminAuth() {
 }
 
 export async function getAuthenticatedUser(): Promise<DecodedIdToken | null> {
-  const auth = getAdminAuth();
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('session')?.value;
 
@@ -39,6 +44,8 @@ export async function getAuthenticatedUser(): Promise<DecodedIdToken | null> {
   }
 
   try {
+    // Initialize Auth and verify the session cookie
+    const auth = getAdminAuth();
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims;
   } catch (error) {
@@ -48,6 +55,3 @@ export async function getAuthenticatedUser(): Promise<DecodedIdToken | null> {
     return null;
   }
 }
-
-// Exporting the function to get the app, not the app instance directly
-export { getAdminApp };
