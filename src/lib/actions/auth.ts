@@ -2,11 +2,10 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase-admin/auth';
-import { adminApp } from '../firebase/server';
+import { getAdminAuth } from '../firebase/server';
 
 export async function createSessionCookie(idToken: string) {
-  const auth = getAuth(adminApp);
+  const auth = getAdminAuth();
   const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
   try {
@@ -25,6 +24,11 @@ export async function createSessionCookie(idToken: string) {
 }
 
 export async function signOutUser() {
-  cookies().delete('session');
-  return { success: true };
+    try {
+        cookies().delete('session');
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting session cookie:', error);
+        return { error: 'Could not sign out due to a server error.' };
+    }
 }
