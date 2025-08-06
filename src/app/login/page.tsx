@@ -1,25 +1,54 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { createSessionCookie } from '@/lib/actions/auth';
 
 export default function LoginPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!authLoading && user) {
       router.push('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
-  const handleLogin = () => {
-    window.open('https://user.subhrachakraborti.com', '_blank');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+      await createSessionCookie(idToken);
+      // The onIdTokenChanged listener in useAuth will handle the redirect
+      toast({ title: 'Success', description: 'Logged in successfully.' });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'Please check your credentials and try again.',
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,14 +61,38 @@ export default function LoginPage() {
             Please log in to access the chat application.
           </p>
         </div>
-        <div className="w-full">
-            <Button onClick={handleLogin} className="w-full" size="lg">
-                <LogIn className="mr-2 h-5 w-5" />
-                Login with External Service
-            </Button>
-        </div>
+        <form onSubmit={handleLogin} className="w-full space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="m@example.com" 
+              required 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <Button type="submit" className="w-full" size="lg" disabled={isLoading || authLoading}>
+            {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+            Login
+          </Button>
+        </form>
          <p className="px-8 text-center text-sm text-muted-foreground">
-          By clicking continue, you agree to our Terms of Service and Privacy Policy.
+          Don't have an account?{' '}
+          <Link href="https://user.subhrachakraborti.com" target="_blank" className="underline underline-offset-4 hover:text-primary">
+            Sign up
+          </Link>
         </p>
       </div>
     </div>
