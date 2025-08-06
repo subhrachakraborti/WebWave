@@ -6,6 +6,7 @@ import { onIdTokenChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createSessionCookie } from '@/lib/actions/auth';
 import { Loader2 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -17,9 +18,13 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
+// List of routes that do not require the loading spinner
+const unauthenticatedRoutes = ['/login'];
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onIdTokenChanged(auth, async (newUser) => {
@@ -34,7 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  if (loading) {
+  const showLoader = loading && !unauthenticatedRoutes.includes(pathname);
+
+  if (showLoader) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

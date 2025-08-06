@@ -7,13 +7,15 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import { LogIn, Loader2 } from 'lucide-react';
+import { LogIn, Loader2, MessageSquarePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createSessionCookie } from '@/lib/actions/auth';
+import { CreateRoomButton } from '@/components/chat/create-room-button';
+import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const { user, loading: authLoading } = useAuth();
@@ -43,8 +45,6 @@ export default function LoginPage() {
         throw new Error(sessionResult.error);
       }
       
-      // The onIdTokenChanged listener in useAuth will eventually handle the redirect,
-      // but we can push eagerly to improve user experience.
       router.push('/dashboard');
       toast({ title: 'Success', description: 'Logged in successfully.' });
       
@@ -55,21 +55,36 @@ export default function LoginPage() {
         title: 'Login Failed',
         description: error.message || 'Please check your credentials and try again.',
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6">
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6 p-4">
         <div className="flex flex-col items-center space-y-2 text-center">
             <Logo className="h-20 w-20 text-primary" />
           <h1 className="text-3xl font-bold">Welcome to WebWave</h1>
           <p className="text-muted-foreground">
-            Please log in using your SubhraVerse account to access the chat application.
+            Create a temporary chatroom or log in to your account.
           </p>
         </div>
+        
+        <div className="w-full space-y-4">
+            <CreateRoomButton />
+        </div>
+        
+        <div className="flex w-full items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+        </div>
+
         <form onSubmit={handleLogin} className="w-full space-y-4">
+          <p className="text-sm text-center font-medium text-muted-foreground">
+            Log in to manage your chatrooms.
+          </p>
           <div>
             <Label htmlFor="email">Email</Label>
             <Input 

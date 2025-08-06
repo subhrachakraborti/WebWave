@@ -22,10 +22,8 @@ function generateCode() {
 
 export async function createChatroom(name: string) {
   try {
+    // User can be authenticated or null
     const user = await getAuthenticatedUser();
-    if (!user) {
-      return { error: 'Authentication failed. Please log in again.' };
-    }
     
     const expirationDate = new Date();
     expirationDate.setMinutes(expirationDate.getMinutes() + 120);
@@ -36,7 +34,8 @@ export async function createChatroom(name: string) {
       .from('chatrooms')
       .insert({
         name,
-        creator_id: user.uid,
+        // Use user's UID if they are logged in, otherwise use a placeholder or null
+        creator_id: user ? user.uid : 'anonymous',
         code: roomCode,
         expires_at: expirationDate.toISOString(),
       })
@@ -48,17 +47,19 @@ export async function createChatroom(name: string) {
       return { error: 'Could not create chatroom due to a database error.' };
     }
 
-    const { error: memberError } = await supabase
-      .from('chatroom_members')
-      .insert({
-        chatroom_id: roomData.id,
-        user_id: user.uid,
-      });
+    // If the user is logged in, add them as a member
+    if (user) {
+      const { error: memberError } = await supabase
+        .from('chatroom_members')
+        .insert({
+          chatroom_id: roomData.id,
+          user_id: user.uid,
+        });
 
-    if (memberError) {
-      console.error('Error adding member to chatroom:', memberError);
-      // You might want to delete the created room here for consistency
-      return { error: 'Could not set chatroom creator.' };
+      if (memberError) {
+        console.error('Error adding member to chatroom:', memberError);
+        // Not a fatal error, the room is still created
+      }
     }
 
     revalidatePath('/dashboard');
@@ -73,7 +74,7 @@ export async function joinChatroom(code: string) {
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
-      return { error: 'Authentication failed. Please log in again.' };
+      return { error: 'You must be logged in to join a room.' };
     }
 
     const { data: roomData, error: roomError } = await supabase
@@ -127,10 +128,7 @@ export async function joinChatroom(code: string) {
 export async function sendMessage(chatroomId: string, message: { text: string; type: 'text' | 'image'; imageUrl?: string; }) {
   try {
     const user = await getAuthenticatedUser();
-    if (!user) {
-      return { error: 'Authentication failed. Please log in again.' };
-    }
-
+    
     if (message.type === 'text' && !message.text.trim()) {
       return { error: 'Message cannot be empty.' };
     }
@@ -139,8 +137,8 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
         .from('messages')
         .insert({
             chatroom_id: chatroomId,
-            sender_id: user.uid,
-            sender_name: user.name || 'Anonymous',
+            sender_id: user ? user.uid : 'anonymous',
+            sender_name: user ? (user.name || 'Anonymous User') : 'Anonymous',
             text: message.text,
             image_url: message.imageUrl,
             type: message.type,

@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, LogIn, LogOut } from 'lucide-react';
+import { Users, LogIn, LogOut, MessageSquarePlus } from 'lucide-react';
 import { useChatrooms } from '@/hooks/use-chat';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
@@ -83,10 +83,10 @@ export default function ChatSidebar() {
                   </Button>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground p-2">No chatrooms yet.</p>
+                <p className="text-sm text-muted-foreground p-2">No chatrooms yet. Create or join one!</p>
               )
             ) : (
-              <p className="text-sm text-muted-foreground p-2">Please log in to see chatrooms.</p>
+              <p className="text-sm text-muted-foreground p-2">Please log in to see your chatrooms.</p>
             )}
           </div>
         </div>
@@ -119,10 +119,14 @@ export default function ChatSidebar() {
             <JoinRoomDialog />
           </>
         ) : (
-          <Button onClick={handleLogin} className="w-full">
-            <LogIn className="mr-2 h-5 w-5" />
-            Login
-          </Button>
+          <>
+            <CreateRoomButton />
+            <JoinRoomDialog />
+            <Button onClick={handleLogin} className="w-full">
+              <LogIn className="mr-2 h-5 w-5" />
+              Login to View Dashboard
+            </Button>
+          </>
         )}
       </div>
     </aside>
