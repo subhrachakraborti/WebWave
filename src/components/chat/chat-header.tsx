@@ -1,8 +1,9 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Chatroom } from '@/lib/types';
-import { Users, Trash2 } from 'lucide-react';
+import { Users, Trash2, Clock } from 'lucide-react';
 import { SharePopover } from './share-popover';
 import {
   AlertDialog,
@@ -29,9 +30,32 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
+  const [timeLeft, setTimeLeft] = useState('');
 
   const isCreator = user && chatroom.creator_id === user.uid;
   const memberCount = chatroom.chatroom_members?.length || 0;
+
+  useEffect(() => {
+    if (!chatroom.expires_at) return;
+
+    const interval = setInterval(() => {
+      const expirationTime = new Date(chatroom.expires_at).getTime();
+      const now = new Date().getTime();
+      const distance = expirationTime - now;
+
+      if (distance < 0) {
+        setTimeLeft('Expired');
+        clearInterval(interval);
+        // Optionally redirect or show a message
+      } else {
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [chatroom.expires_at]);
 
   const handleDelete = async () => {
     const result = await deleteChatroom(chatroom.id);
@@ -45,11 +69,19 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
 
   return (
     <header className="flex items-center justify-between p-4 border-b bg-secondary/40">
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold">{chatroom.name}</h2>
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Users className="h-4 w-4 mr-1" />
-          <span>{memberCount} / 7 members</span>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center">
+                <Users className="h-4 w-4 mr-1" />
+                <span>{memberCount} / 7 members</span>
+            </div>
+             {timeLeft && (
+            <div className="flex items-center font-mono text-xs bg-muted px-2 py-1 rounded-md">
+              <Clock className="h-4 w-4 mr-1.5" />
+              <span>Expires in: {timeLeft}</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
