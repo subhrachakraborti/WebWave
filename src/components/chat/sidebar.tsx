@@ -9,7 +9,7 @@ import Logo from '@/components/icons/logo';
 import { CreateRoomButton } from './create-room-button';
 import { JoinRoomDialog } from './join-room-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
@@ -21,18 +21,31 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ChatSidebar() {
   const { chatrooms, loading: chatroomsLoading } = useChatrooms();
   const { user, loading: authLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogin = () => {
-    window.open('https://user.subhrachakraborti.com', '_blank');
+    router.push('/login');
   };
 
   const handleLogout = async () => {
-    await signOutUser();
+    try {
+      await signOut(auth); // Sign out from client-side
+      await signOutUser(); // Sign out from server-side (clear cookie)
+      toast({ title: 'Logged out', description: 'You have been successfully logged out.' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to log out.' });
+    }
   };
 
   return (
