@@ -46,11 +46,13 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
       if (distance < 0) {
         setTimeLeft('Expired');
         clearInterval(interval);
-        // Optionally redirect or show a message
       } else {
+        const hours = Math.floor(distance / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        setTimeLeft(
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        );
       }
     }, 1000);
 

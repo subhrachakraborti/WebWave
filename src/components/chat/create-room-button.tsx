@@ -59,7 +59,7 @@ export function CreateRoomButton() {
         <DialogHeader>
           <DialogTitle>Create Chatroom</DialogTitle>
           <DialogDescription>
-            Give your new chatroom a name. It will expire in 120 minutes.
+            Give your new chatroom a name. It will expire in 2 hours.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
