@@ -47,7 +47,7 @@ export function CreateRoomButton() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
-      toast({ variant: 'destructive', description: 'You must be logged in.' });
+      toast({ variant: 'destructive', description: 'You must be logged in to create a room.' });
       return;
     }
     setIsLoading(true);
@@ -64,10 +64,22 @@ export function CreateRoomButton() {
     }
   }
 
+  const handleTriggerClick = () => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'You need to be logged in to create a new room.',
+      });
+    } else {
+      setIsOpen(true);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full">
+        <Button className="w-full" onClick={handleTriggerClick}>
           <MessageSquarePlus className="mr-2 h-5 w-5" />
           Create New Room
         </Button>
