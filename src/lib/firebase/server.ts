@@ -2,6 +2,9 @@
 import {getAuth} from 'firebase-admin/auth';
 import {initializeApp, getApps, App, getApp} from 'firebase-admin/app';
 import {credential} from 'firebase-admin';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const firebaseAdminConfig = {
   credential: credential.cert({
@@ -23,10 +26,14 @@ export async function getUserIdFromSession(sessionCookie?: string) {
     return null;
   }
   try {
+    getFirebaseAdminApp();
     const decodedToken = await getAuth().verifySessionCookie(
       sessionCookie,
       true
     );
     return decodedToken.uid;
   } catch (error) {
-    
+    console.error('Error verifying session cookie:', error);
+    return null;
+  }
+}
