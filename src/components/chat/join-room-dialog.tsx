@@ -67,7 +67,7 @@ export function JoinRoomDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full" disabled={!user}>
           <Users className="mr-2 h-5 w-5" />
           Join with Code
         </Button>

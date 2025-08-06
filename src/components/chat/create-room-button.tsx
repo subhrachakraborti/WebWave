@@ -67,7 +67,7 @@ export function CreateRoomButton() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full">
+        <Button className="w-full" disabled={!user}>
            <MessageSquarePlus className="mr-2 h-5 w-5" />
           Create New Room
         </Button>
