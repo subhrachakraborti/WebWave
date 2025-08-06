@@ -11,17 +11,25 @@ const firebaseAdminConfig = {
     privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
 };
 
-export const adminApp: App =
-  getApps().find((it) => it.name === 'admin') ||
-  initializeApp(
-    {
-      credential: cert(firebaseAdminConfig),
-    },
-    'admin'
-  );
+let adminApp: App;
+
+if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
+  adminApp =
+    getApps().find((it) => it.name === 'admin') ||
+    initializeApp(
+      {
+        credential: cert(firebaseAdminConfig),
+      },
+      'admin'
+    );
+} else {
+    console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
+}
 
 
 export async function getAuthenticatedUser() {
+  if (!adminApp) return null;
+
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('session')?.value;
 
@@ -37,3 +45,5 @@ export async function getAuthenticatedUser() {
     return null;
   }
 }
+
+export { adminApp };
