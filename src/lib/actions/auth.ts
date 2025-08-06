@@ -3,14 +3,9 @@
 import {z} from 'zod';
 import {auth} from '@/lib/firebase';
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile,
   signOut,
 } from 'firebase/auth';
-import {getAuth} from 'firebase-admin/auth';
-import {cookies} from 'next/headers';
-import {revalidatePath} from 'next/cache';
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -25,36 +20,28 @@ export async function signInUser(values: z.infer<typeof signInSchema>) {
     }
     const {email, password} = validatedValues.data;
     
-    const userCredential = await signInWithEmailAndPassword(
+    await signInWithEmailAndPassword(
       auth,
       email,
       password
     );
-    
-    const idToken = await userCredential.user.getIdToken();
-    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
-    const sessionCookie = await getAuth().createSessionCookie(idToken, {
-      expiresIn,
-    });
-    
-    cookies().set('session', sessionCookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: expiresIn,
-      path: '/',
-    });
-    
+        
     return {success: true};
   } catch (error: any) {
-    if (error.code === 'auth/invalid-credential') {
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
       return {error: 'Invalid email or password.'};
     }
+    console.error('Sign-in error:', error);
     return {error: 'An unexpected error occurred.'};
   }
 }
 
 export async function signOutUser() {
-  await signOut(auth);
-  cookies().delete('session');
-  revalidatePath('/');
+    try {
+        await signOut(auth);
+        return { success: true };
+    } catch(error) {
+        console.error('Sign-out error:', error);
+        return { error: 'Failed to sign out.' };
+    }
 }

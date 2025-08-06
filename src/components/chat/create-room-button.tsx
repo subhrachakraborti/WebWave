@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createChatroom } from '@/lib/actions/chat';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Room name must be at least 3 characters.').max(50, 'Room name must be less than 50 characters.'),
@@ -37,6 +38,7 @@ export function CreateRoomButton() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,8 +46,12 @@ export function CreateRoomButton() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to create a room.' });
+        return;
+    }
     setIsLoading(true);
-    const result = await createChatroom(values.name);
+    const result = await createChatroom(values.name, user.uid);
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
       setIsLoading(false);
@@ -96,4 +102,7 @@ export function CreateRoomButton() {
             </DialogFooter>
           </form>
         </Form>
-      </Dialog
+      </DialogContent>
+    </Dialog>
+  );
+}

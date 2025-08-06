@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from '../ui/dialog';
 import { Input } from '../ui/input';
+import { useAuth } from '@/hooks/use-auth';
 
 const emojis = ['😀', '😂', '😍', '🤔', '😢', '🔥', '👍', '❤️', '🎉', '👋'];
 
@@ -27,8 +28,13 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSendMessage = async (messageContent?: { text: string; type: 'text' | 'image'; imageUrl?: string }) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to send messages.' });
+        return;
+    }
     setIsLoading(true);
     
     const message = messageContent || { text, type: 'text' as const };
@@ -38,7 +44,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
       return;
     }
 
-    const result = await sendMessage(chatroomId, message);
+    const result = await sendMessage(chatroomId, message, user.uid, user.displayName || 'Anonymous');
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
     } else {
@@ -71,11 +77,12 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
               handleSendMessage();
             }
           }}
+          disabled={!user}
         />
         <div className="absolute top-1/2 right-2 transform -translate-y-1/2 flex items-center gap-1">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" disabled={!user}>
                 <Smile className="h-5 w-5" />
               </Button>
             </PopoverTrigger>
@@ -96,7 +103,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
           </Popover>
            <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" disabled={!user}>
                   <ImageIcon className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
@@ -112,7 +119,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
                 </form>
               </DialogContent>
             </Dialog>
-          <Button onClick={() => handleSendMessage()} disabled={isLoading || !text.trim()} size="icon">
+          <Button onClick={() => handleSendMessage()} disabled={isLoading || !text.trim() || !user} size="icon">
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </Button>
         </div>
