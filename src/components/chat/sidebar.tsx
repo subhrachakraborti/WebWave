@@ -42,7 +42,7 @@ export default function ChatSidebar() {
             Chatrooms
           </h2>
           <div className="space-y-1">
-            {chatroomsLoading ? (
+            {authLoading || chatroomsLoading ? (
               <>
                 <Skeleton className="h-9 w-full" />
                 <Skeleton className="h-9 w-full" />
