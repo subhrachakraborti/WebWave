@@ -1,5 +1,5 @@
 
-import 'server-only';
+'use server-only';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
