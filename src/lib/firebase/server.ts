@@ -2,6 +2,7 @@
 import 'server-only';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 import { cookies } from 'next/headers';
 import "dotenv/config";
 
@@ -13,23 +14,21 @@ const firebaseAdminConfig = {
 
 let adminApp: App;
 
-if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
-  if (!getApps().length) {
+if (getApps().length === 0) {
+  if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
     adminApp = initializeApp({
       credential: cert(firebaseAdminConfig)
     }, 'admin');
   } else {
-    adminApp = getApps().find(app => app.name === 'admin') || initializeApp({
-      credential: cert(firebaseAdminConfig)
-    }, 'admin');
+    console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
   }
 } else {
-  console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
+  adminApp = getApps().find(app => app.name === 'admin')!;
 }
 
-export async function getAuthenticatedUser() {
-  if (!adminApp) return null;
 
+export async function getAuthenticatedUser() {
+  const auth = getAuth(adminApp);
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('session')?.value;
 
@@ -38,12 +37,15 @@ export async function getAuthenticatedUser() {
   }
 
   try {
-    const decodedClaims = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims;
   } catch (error) {
     console.error('Error verifying session cookie:', error);
+    // Clear the invalid cookie
+    cookies().delete('session');
     return null;
   }
 }
 
-export { adminApp };
+const db = getFirestore(adminApp);
+export { adminApp, db };
