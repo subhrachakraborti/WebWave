@@ -11,10 +11,11 @@ import { ScrollArea } from '../ui/scroll-area';
 interface ChatMessagesProps {
   messages: Message[];
   loading: boolean;
-  userId: string | undefined;
 }
 
-export default function ChatMessages({ messages, loading, userId }: ChatMessagesProps) {
+const currentUserId = 'anonymous_user';
+
+export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function ChatMessages({ messages, loading, userId }: ChatMessages
           </div>
         ) : (
           messages.map((message) => {
-            const isCurrentUser = message.senderId === userId;
+            const isCurrentUser = message.senderId === currentUserId;
             return (
               <div
                 key={message.id}

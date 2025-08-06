@@ -3,7 +3,6 @@
 import { Chatroom } from '@/lib/types';
 import { Users, Trash2 } from 'lucide-react';
 import { SharePopover } from './share-popover';
-import { useAuth } from '@/hooks/use-auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,18 +24,13 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({ chatroom }: ChatHeaderProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
-  const isCreator = user?.uid === chatroom.creatorId;
+  const isCreator = chatroom.creatorId === 'anonymous_user';
 
   const handleDelete = async () => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You are not authorized.' });
-        return;
-    }
-    const result = await deleteChatroom(chatroom.id, user.uid);
+    const result = await deleteChatroom(chatroom.id);
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
     } else {

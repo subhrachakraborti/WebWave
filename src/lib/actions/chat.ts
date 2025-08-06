@@ -1,6 +1,6 @@
 'use server';
 
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import {
   collection,
   addDoc,
@@ -26,28 +26,18 @@ function generateCode() {
   return result;
 }
 
+const anonymousUserId = 'anonymous_user';
+const anonymousUserName = 'Anonymous';
 
-async function getAuthenticatedUser() {
-    // auth.currentUser will not work on the server.
-    // We must rely on the client to pass the UID.
-    // A more secure way would involve session cookies and server-side verification.
-    // For this simplified approach, we accept this limitation.
-    // The actions will now require the userId to be passed in.
-    return null;
-}
-
-
-export async function createChatroom(name: string, userId: string) {
-  if (!userId) return { error: 'User not authenticated.' };
-  
+export async function createChatroom(name: string) {
   const expirationDate = new Date();
   expirationDate.setMinutes(expirationDate.getMinutes() + 120);
 
   try {
     const newRoom = await addDoc(collection(db, 'chatrooms'), {
       name,
-      creatorId: userId,
-      members: [userId],
+      creatorId: anonymousUserId,
+      members: [anonymousUserId],
       code: generateCode(),
       createdAt: serverTimestamp(),
       expiresAt: expirationDate,
@@ -60,9 +50,7 @@ export async function createChatroom(name: string, userId: string) {
   }
 }
 
-export async function joinChatroom(code: string, userId: string) {
-  if (!userId) return { error: 'User not authenticated.' };
-
+export async function joinChatroom(code: string) {
   const q = query(collection(db, 'chatrooms'), where('code', '==', code));
   const querySnapshot = await getDocs(q);
 
@@ -81,21 +69,19 @@ export async function joinChatroom(code: string, userId: string) {
     return { error: 'This chatroom is full.' };
   }
 
-  if (roomData.members.includes(userId)) {
+  if (roomData.members.includes(anonymousUserId)) {
      return { id: roomDoc.id }; // Already a member
   }
 
   await updateDoc(doc(db, 'chatrooms', roomDoc.id), {
-    members: arrayUnion(userId),
+    members: arrayUnion(anonymousUserId),
   });
 
   revalidatePath('/dashboard');
   return { id: roomDoc.id };
 }
 
-export async function sendMessage(chatroomId: string, message: { text: string; type: 'text' | 'image'; imageUrl?: string; }, userId: string, userName: string) {
-  if (!userId) return { error: 'User not authenticated.' };
-
+export async function sendMessage(chatroomId: string, message: { text: string; type: 'text' | 'image'; imageUrl?: string; }) {
   if (!message.text && message.type === 'text') {
     return { error: 'Message cannot be empty.' };
   }
@@ -103,8 +89,8 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
   try {
     await addDoc(collection(db, 'chatrooms', chatroomId, 'messages'), {
       ...message,
-      senderId: userId,
-      senderName: userName || 'Anonymous', // Fallback name
+      senderId: anonymousUserId,
+      senderName: anonymousUserName,
       timestamp: serverTimestamp(),
     });
     return { success: true };
@@ -113,25 +99,21 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
   }
 }
 
-export async function deleteChatroom(chatroomId: string, userId: string) {
-    if (!userId) return { error: 'User not authenticated.' };
-
+export async function deleteChatroom(chatroomId: string) {
     const roomRef = doc(db, 'chatrooms', chatroomId);
     const roomSnap = await getDoc(roomRef);
 
-    if (!roomSnap.exists() || roomSnap.data().creatorId !== userId) {
-        return { error: 'Unauthorized or room not found.' };
+    if (!roomSnap.exists()) {
+        return { error: 'Room not found.' };
     }
 
     try {
-        // Delete all messages in subcollection
         const messagesRef = collection(db, 'chatrooms', chatroomId, 'messages');
         const messagesSnap = await getDocs(messagesRef);
         const batch = writeBatch(db);
         messagesSnap.docs.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
 
-        // Delete the chatroom document itself
         await deleteDoc(roomRef);
 
         revalidatePath('/dashboard');
