@@ -30,7 +30,8 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
   const router = useRouter();
   const { user } = useAuth();
 
-  const isCreator = user && chatroom.creatorId === user.uid;
+  const isCreator = user && chatroom.creator_id === user.uid;
+  const memberCount = chatroom.chatroom_members?.length || 0;
 
   const handleDelete = async () => {
     const result = await deleteChatroom(chatroom.id);
@@ -48,7 +49,7 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
         <h2 className="text-lg font-bold">{chatroom.name}</h2>
         <div className="flex items-center text-sm text-muted-foreground">
           <Users className="h-4 w-4 mr-1" />
-          <span>{chatroom.members.length} / 7 members</span>
+          <span>{memberCount} / 7 members</span>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -66,7 +67,7 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the chatroom and all of its messages.
-                </Description>
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>

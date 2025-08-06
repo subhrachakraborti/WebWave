@@ -2,8 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/firebase';
 import { Chatroom, Message } from '@/lib/types';
 import { useAuth } from './use-auth';
 
@@ -19,22 +18,52 @@ export function useChatrooms() {
       return;
     }
 
-    const q = query(collection(db, 'chatrooms'), where('members', 'array-contains', user.uid));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const rooms = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        expiresAt: doc.data().expiresAt.toDate(),
-      })) as Chatroom[];
-      setChatrooms(rooms.filter(room => room.expiresAt > new Date()));
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching chatrooms: ", error);
-      setLoading(false);
-    });
+    const fetchChatrooms = async () => {
+        setLoading(true);
+        const { data: memberEntries, error: memberError } = await supabase
+            .from('chatroom_members')
+            .select('chatroom_id')
+            .eq('user_id', user.uid);
+            
+        if (memberError || !memberEntries) {
+            console.error("Error fetching user's chatrooms:", memberError);
+            setChatrooms([]);
+            setLoading(false);
+            return;
+        }
 
-    return () => unsubscribe();
+        const roomIds = memberEntries.map(entry => entry.chatroom_id);
+
+        if (roomIds.length > 0) {
+            const { data: roomData, error: roomError } = await supabase
+                .from('chatrooms')
+                .select('*, chatroom_members(user_id)')
+                .in('id', roomIds)
+                .filter('expires_at', 'gt', new Date().toISOString());
+            
+            if (roomError) {
+                console.error("Error fetching chatroom details:", roomError);
+                setChatrooms([]);
+            } else {
+                setChatrooms(roomData as Chatroom[]);
+            }
+        } else {
+            setChatrooms([]);
+        }
+        setLoading(false);
+    };
+
+    fetchChatrooms();
+    
+    const channel = supabase.channel('public:chatroom_members')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chatroom_members', filter: `user_id=eq.${user.uid}` }, fetchChatrooms)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chatrooms' }, fetchChatrooms)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+
   }, [user]);
 
   return { chatrooms, loading };
@@ -50,23 +79,36 @@ export function useMessages(chatroomId: string | null) {
       setLoading(false);
       return;
     }
-    setLoading(true);
-    const q = query(collection(db, 'chatrooms', chatroomId, 'messages'), orderBy('timestamp', 'asc'));
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const msgs = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate(),
-      })) as Message[];
-      setMessages(msgs);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching messages: ", error);
-      setLoading(false);
-    });
+    const fetchMessages = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chatroom_id', chatroomId)
+            .order('created_at', { ascending: true });
+        
+        if (error) {
+            console.error("Error fetching messages:", error);
+            setMessages([]);
+        } else {
+            setMessages(data as Message[]);
+        }
+        setLoading(false);
+    };
 
-    return () => unsubscribe();
+    fetchMessages();
+
+    const channel = supabase.channel(`public:messages:chatroom_id=eq.${chatroomId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chatroom_id=eq.${chatroomId}` }, (payload) => {
+        setMessages(currentMessages => [...currentMessages, payload.new as Message]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+
   }, [chatroomId]);
 
   return { messages, loading };
@@ -83,31 +125,37 @@ export function useChatroom(chatroomId: string | null) {
             return;
         }
 
-        const roomRef = doc(db, 'chatrooms', chatroomId);
-        const unsubscribe = onSnapshot(roomRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                const roomData = {
-                    id: docSnap.id,
-                    ...data,
-                    expiresAt: data.expiresAt.toDate(),
-                } as Chatroom;
-                
-                if (roomData.expiresAt > new Date()) {
-                    setChatroom(roomData);
-                } else {
-                    setChatroom(null); // Room expired
-                }
-            } else {
+        const fetchChatroom = async () => {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('chatrooms')
+                .select('*, chatroom_members(user_id)')
+                .eq('id', chatroomId)
+                .single();
+            
+            if (error || !data || new Date(data.expires_at) < new Date()) {
+                console.error("Error fetching chatroom, or it has expired:", error);
                 setChatroom(null);
+            } else {
+                setChatroom(data as Chatroom);
             }
             setLoading(false);
-        }, (error) => {
-            console.error("Error fetching chatroom details: ", error);
-            setLoading(false);
-        });
+        };
+        
+        fetchChatroom();
 
-        return () => unsubscribe();
+        const roomChannel = supabase.channel(`public:chatrooms:id=eq.${chatroomId}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'chatrooms', filter: `id=eq.${chatroomId}`}, fetchChatroom)
+          .subscribe();
+        
+        const memberChannel = supabase.channel(`public:chatroom_members:chatroom_id=eq.${chatroomId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chatroom_members', filter: `chatroom_id=eq.${chatroomId}` }, fetchChatroom)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(roomChannel);
+            supabase.removeChannel(memberChannel);
+        };
     }, [chatroomId]);
 
     return { chatroom, loading };

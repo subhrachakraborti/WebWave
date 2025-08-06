@@ -1,21 +1,21 @@
-import { Timestamp } from 'firebase/firestore';
 
 export interface Chatroom {
   id: string;
   name: string;
-  creatorId: string;
-  members: string[];
+  creator_id: string;
   code: string;
-  createdAt: Timestamp;
-  expiresAt: Date;
+  created_at: string; // ISO 8601 date string
+  expires_at: string; // ISO 8601 date string
+  chatroom_members?: { user_id: string }[];
 }
 
 export interface Message {
   id: string;
-  text: string;
+  chatroom_id: string;
+  sender_id: string;
+  sender_name: string;
+  text: string | null;
+  image_url: string | null;
   type: 'text' | 'image';
-  imageUrl?: string;
-  senderId: string;
-  senderName: string;
-  timestamp: Date | null;
+  created_at: string; // ISO 8601 date string
 }
