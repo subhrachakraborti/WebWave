@@ -15,15 +15,15 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account.</CardDescription>
+          <CardDescription>Login Using Your SubhraVerse Account.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline text-primary">
-              Sign up
-            </Link>
+            <a href="https://user.subhrachakraborti.com" target="_blank" rel="noopener noreferrer" className="underline text-primary">
+              Create an account
+            </a>
           </div>
         </CardContent>
       </Card>
