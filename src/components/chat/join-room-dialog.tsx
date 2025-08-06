@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { joinChatroom } from '@/lib/actions/chat';
 import { Loader2, Users } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
@@ -37,7 +36,6 @@ export function JoinRoomDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,12 +44,8 @@ export function JoinRoomDialog() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      toast({ variant: 'destructive', description: 'You must be logged in.' });
-      return;
-    }
     setIsLoading(true);
-    const result = await joinChatroom(values.code.toUpperCase(), user.uid);
+    const result = await joinChatroom(values.code.toUpperCase());
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
       setIsLoading(false);
@@ -103,6 +97,4 @@ export function JoinRoomDialog() {
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
-}
+    </

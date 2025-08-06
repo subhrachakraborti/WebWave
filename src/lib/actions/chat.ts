@@ -1,6 +1,6 @@
 'use server';
 
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import {
   collection,
   addDoc,
@@ -16,6 +16,8 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { getUserIdFromSession } from '../firebase/server';
 
 function generateCode() {
   const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
@@ -26,7 +28,13 @@ function generateCode() {
   return result;
 }
 
-export async function createChatroom(name: string, userId: string) {
+async function getUserId() {
+    const sessionCookie = cookies().get('session')?.value;
+    return await getUserIdFromSession(sessionCookie);
+}
+
+export async function createChatroom(name: string) {
+  const userId = await getUserId();
   if (!userId) return { error: 'User not authenticated.' };
   
   const expirationDate = new Date();
@@ -48,7 +56,8 @@ export async function createChatroom(name: string, userId: string) {
   }
 }
 
-export async function joinChatroom(code: string, userId: string) {
+export async function joinChatroom(code: string) {
+  const userId = await getUserId();
   if (!userId) return { error: 'User not authenticated.' };
 
   const q = query(collection(db, 'chatrooms'), where('code', '==', code));
@@ -82,8 +91,9 @@ export async function joinChatroom(code: string, userId: string) {
 }
 
 export async function sendMessage(chatroomId: string, message: { text: string; type: 'text' | 'image'; imageUrl?: string; }) {
-  const user = auth.currentUser;
-  if (!user) return { error: 'User not authenticated.' };
+  const userId = await getUserId();
+  const user = (await getDoc(doc(db, 'users', userId!))).data(); // This is a simplification. A proper user profile fetch would be better.
+  if (!userId) return { error: 'User not authenticated.' };
 
   if (!message.text && message.type === 'text') {
     return { error: 'Message cannot be empty.' };
@@ -92,8 +102,8 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
   try {
     await addDoc(collection(db, 'chatrooms', chatroomId, 'messages'), {
       ...message,
-      senderId: user.uid,
-      senderName: user.displayName,
+      senderId: userId,
+      senderName: user?.displayName || 'Anonymous', // Fallback name
       timestamp: serverTimestamp(),
     });
     return { success: true };
@@ -102,7 +112,8 @@ export async function sendMessage(chatroomId: string, message: { text: string; t
   }
 }
 
-export async function deleteChatroom(chatroomId: string, userId: string) {
+export async function deleteChatroom(chatroomId: string) {
+    const userId = await getUserId();
     if (!userId) return { error: 'User not authenticated.' };
 
     const roomRef = doc(db, 'chatrooms', chatroomId);
@@ -126,6 +137,3 @@ export async function deleteChatroom(chatroomId: string, userId: string) {
         revalidatePath('/dashboard');
         return { success: true };
     } catch (error) {
-        return { error: 'Failed to delete chatroom.' };
-    }
-}

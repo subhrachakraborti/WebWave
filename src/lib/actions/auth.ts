@@ -1,62 +1,60 @@
 'use server';
 
-import { z } from 'zod';
-import { auth } from '@/lib/firebase';
+import {z} from 'zod';
+import {auth} from '@/lib/firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   signOut,
 } from 'firebase/auth';
-import { revalidatePath } from 'next/cache';
-
-const signUpSchema = z.object({
-  username: z.string().min(3).max(20),
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import {getAuth} from 'firebase-admin/auth';
+import {cookies} from 'next/headers';
+import {revalidatePath} from 'next/cache';
 
 const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
 });
 
-export async function signUpUser(values: z.infer<typeof signUpSchema>) {
-  try {
-    const validatedValues = signUpSchema.safeParse(values);
-    if (!validatedValues.success) {
-      return { error: 'Invalid input.' };
-    }
-
-    const { email, password, username } = validatedValues.data;
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName: username });
-
-    return { success: true };
-  } catch (error: any) {
-    return { error: error.message };
-  }
-}
-
 export async function signInUser(values: z.infer<typeof signInSchema>) {
   try {
     const validatedValues = signInSchema.safeParse(values);
     if (!validatedValues.success) {
-      return { error: 'Invalid input.' };
+      return {error: 'Invalid input.'};
     }
-    const { email, password } = validatedValues.data;
-    await signInWithEmailAndPassword(auth, email, password);
-    revalidatePath('/dashboard');
-    return { success: true };
+    const {email, password} = validatedValues.data;
+    
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    
+    const idToken = await userCredential.user.getIdToken();
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+    const sessionCookie = await getAuth().createSessionCookie(idToken, {
+      expiresIn,
+    });
+    
+    cookies().set('session', sessionCookie, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: expiresIn,
+      path: '/',
+    });
+    
+    return {success: true};
   } catch (error: any) {
     if (error.code === 'auth/invalid-credential') {
-      return { error: 'Invalid email or password.' };
+      return {error: 'Invalid email or password.'};
     }
-    return { error: 'An unexpected error occurred.' };
+    return {error: 'An unexpected error occurred.'};
   }
 }
 
 export async function signOutUser() {
   await signOut(auth);
+  cookies().delete('session');
   revalidatePath('/');
 }

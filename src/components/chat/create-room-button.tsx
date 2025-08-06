@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { createChatroom } from '@/lib/actions/chat';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
@@ -37,7 +36,6 @@ export function CreateRoomButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,12 +44,8 @@ export function CreateRoomButton() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      toast({ variant: 'destructive', description: 'You must be logged in to create a room.' });
-      return;
-    }
     setIsLoading(true);
-    const result = await createChatroom(values.name, user.uid);
+    const result = await createChatroom(values.name);
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
       setIsLoading(false);
@@ -64,24 +58,11 @@ export function CreateRoomButton() {
     }
   }
 
-  const handleTriggerClick = () => {
-    if (authLoading) return; // Do nothing if auth state is still loading
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Required',
-        description: 'You need to be logged in to create a new room.',
-      });
-    } else {
-      setIsOpen(true);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full" onClick={handleTriggerClick} disabled={authLoading}>
-           {authLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageSquarePlus className="mr-2 h-5 w-5" />}
+        <Button className="w-full">
+           <MessageSquarePlus className="mr-2 h-5 w-5" />
           Create New Room
         </Button>
       </DialogTrigger>
@@ -115,7 +96,4 @@ export function CreateRoomButton() {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+      </Dialog

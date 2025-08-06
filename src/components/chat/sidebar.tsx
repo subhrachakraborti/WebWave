@@ -11,7 +11,7 @@ import { signOutUser } from '@/lib/actions/auth';
 import { CreateRoomButton } from './create-room-button';
 import { JoinRoomDialog } from './join-room-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -19,9 +19,11 @@ export default function ChatSidebar() {
   const { user, loading: authLoading } = useAuth();
   const { chatrooms, loading: chatroomsLoading } = useChatrooms(user?.uid);
   const pathname = usePathname();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOutUser();
+    router.push('/login');
   };
 
   return (
@@ -91,7 +93,12 @@ export default function ChatSidebar() {
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
-        ) : null}
+        ) : (
+           <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>
+              <LogOut className="mr-2 h-5 w-5" />
+              Login
+            </Button>
+        )}
       </div>
     </aside>
   );

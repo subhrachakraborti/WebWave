@@ -32,7 +32,7 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
   const isCreator = user?.uid === chatroom.creatorId;
 
   const handleDelete = async () => {
-    const result = await deleteChatroom(chatroom.id, user!.uid);
+    const result = await deleteChatroom(chatroom.id);
     if (result.error) {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
     } else {
@@ -73,10 +73,3 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
-    </header>
-  );
-}
