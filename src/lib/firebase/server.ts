@@ -1,6 +1,6 @@
 
 import 'server-only';
-import { initializeApp, getApps, App, getApp, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
 import "dotenv/config";
@@ -14,18 +14,18 @@ const firebaseAdminConfig = {
 let adminApp: App;
 
 if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
-  adminApp =
-    getApps().find((it) => it.name === 'admin') ||
-    initializeApp(
-      {
-        credential: cert(firebaseAdminConfig),
-      },
-      'admin'
-    );
+  if (!getApps().length) {
+    adminApp = initializeApp({
+      credential: cert(firebaseAdminConfig)
+    }, 'admin');
+  } else {
+    adminApp = getApps().find(app => app.name === 'admin') || initializeApp({
+      credential: cert(firebaseAdminConfig)
+    }, 'admin');
+  }
 } else {
-    console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
+  console.warn("Firebase Admin SDK not initialized. Missing environment variables.");
 }
-
 
 export async function getAuthenticatedUser() {
   if (!adminApp) return null;
