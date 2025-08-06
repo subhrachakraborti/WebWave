@@ -58,7 +58,7 @@ export default function LoginPage() {
             <Logo className="h-20 w-20 text-primary" />
           <h1 className="text-3xl font-bold">Welcome to WebWave</h1>
           <p className="text-muted-foreground">
-            Please log in to access the chat application.
+            Please log in using your SubhraVerse account to access the chat application.
           </p>
         </div>
         <form onSubmit={handleLogin} className="w-full space-y-4">
@@ -67,7 +67,7 @@ export default function LoginPage() {
             <Input 
               id="email" 
               type="email" 
-              placeholder="m@example.com" 
+              placeholder="mail@subhrachakraborti.com" 
               required 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -78,6 +78,7 @@ export default function LoginPage() {
             <Input 
               id="password" 
               type="password" 
+              placeholder="••••••••"
               required 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
