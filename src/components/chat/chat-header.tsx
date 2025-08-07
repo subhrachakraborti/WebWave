@@ -86,7 +86,7 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-col md:flex-row items-center gap-2">
         <SharePopover code={chatroom.code} />
         {isCreator && (
           <AlertDialog>
