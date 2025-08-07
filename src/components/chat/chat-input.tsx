@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -58,13 +59,13 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
   };
 
   return (
-    <div className="p-4 border-t bg-background">
+    <div className="p-2 md:p-4 border-t bg-background">
       <div className="relative">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
-          className="pr-24"
+          className="pr-28 md:pr-32"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -72,11 +73,11 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
             }
           }}
         />
-        <div className="absolute top-1/2 right-2 transform -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute top-1/2 right-1.5 md:right-2 transform -translate-y-1/2 flex items-center gap-1">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Smile className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+                <Smile className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2">
@@ -96,8 +97,8 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
           </Popover>
            <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <ImageIcon className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+                  <ImageIcon className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -112,8 +113,8 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
                 </form>
               </DialogContent>
             </Dialog>
-          <Button onClick={() => handleSendMessage()} disabled={isLoading || !text.trim()} size="icon">
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          <Button onClick={() => handleSendMessage()} disabled={isLoading || !text.trim()} size="icon" className="h-8 w-8 md:h-10 md:w-10">
+            {isLoading ? <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" /> : <Send className="h-4 w-4 md:h-5 md:w-5" />}
           </Button>
         </div>
       </div>
