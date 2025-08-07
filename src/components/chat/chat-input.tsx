@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { sendMessage } from '@/lib/actions/chat';
-import { Loader2, Send, Smile, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Send, Smile, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
@@ -48,12 +48,12 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
     setIsLoading(false);
   };
 
-  const handleImageSend = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLinkSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const imageUrl = formData.get('imageUrl') as string;
-    if (imageUrl) {
-      handleSendMessage({ text: `Image: ${imageUrl}`, type: 'image', imageUrl });
+    const linkUrl = formData.get('linkUrl') as string;
+    if (linkUrl) {
+      handleSendMessage({ text: linkUrl, type: 'text' });
       (e.target as HTMLFormElement).closest('dialog')?.close();
     }
   };
@@ -98,17 +98,17 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
            <Dialog>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
-                  <ImageIcon className="h-4 w-4 md:h-5 md:w-5" />
+                  <LinkIcon className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Send an Image</DialogTitle>
+                  <DialogTitle>Send a Link</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleImageSend} className="space-y-4">
-                  <Input name="imageUrl" placeholder="https://example.com/image.png" type="url" required />
+                <form onSubmit={handleLinkSend} className="space-y-4">
+                  <Input name="linkUrl" placeholder="https://example.com" type="url" required />
                   <DialogFooter>
-                    <Button type="submit">Send Image</Button>
+                    <Button type="submit">Send Link</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
