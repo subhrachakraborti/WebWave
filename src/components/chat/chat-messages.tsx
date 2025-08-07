@@ -71,7 +71,7 @@ export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
 
   return (
     <ScrollArea className="flex-1" ref={scrollAreaRef}>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 chat-background-pattern">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

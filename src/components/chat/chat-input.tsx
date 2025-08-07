@@ -123,10 +123,10 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
                                 <div className="space-y-2">
                                     <h4 className="font-medium leading-none">Recommended: <a href="https://file.pizza/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">file.pizza</a></h4>
                                      <p className="text-xs text-muted-foreground">
-                                        ✅ Only upload files you have the right to share.
+                                        ⚠️ No illegal or harmful content allowed.
                                     </p>
                                      <p className="text-xs text-muted-foreground">
-                                        ⚠️ No illegal or harmful content allowed.
+                                        ✅ Only upload files you have the right to share.
                                     </p>
                                     <p className="text-xs text-muted-foreground">
                                        🔒 Share download links only with known recipients.
@@ -141,7 +141,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
                   </div>
                 </DialogHeader>
                 <form onSubmit={handleLinkSend} className="space-y-4">
-                  <Input name="linkUrl" placeholder="https://example.com" type="url" required />
+                  <Input name="linkUrl" placeholder="https://subhrachakraborti.com" type="url" required />
                   <DialogFooter>
                     <Button type="submit">Send Link</Button>
                   </DialogFooter>
