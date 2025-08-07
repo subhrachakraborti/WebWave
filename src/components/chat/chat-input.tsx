@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { sendMessage } from '@/lib/actions/chat';
-import { Loader2, Send, Smile, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Send, Smile, Link as LinkIcon, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
@@ -54,7 +54,9 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
     const linkUrl = formData.get('linkUrl') as string;
     if (linkUrl) {
       handleSendMessage({ text: linkUrl, type: 'text' });
-      (e.target as HTMLFormElement).closest('dialog')?.close();
+      // This is a bit of a hack to close the dialog from the form.
+      // A more robust solution might involve controlling the dialog's open state.
+      document.querySelector('[data-radix-dialog-content]')?.parentElement?.querySelector('button[aria-label="Close"]')?.click();
     }
   };
 
@@ -103,7 +105,41 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Send a Link</DialogTitle>
+                  <div className="flex items-center gap-2">
+                    <DialogTitle>Send a Link</DialogTitle>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Info className="h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80" side="top">
+                           <div className="grid gap-4">
+                               <div className="space-y-1">
+                                <h4 className="font-medium leading-none">Sharing Content</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    You can send any direct URL. For sharing files like images, videos, or documents, use a peer-to-peer service.
+                                </p>
+                               </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none">Recommended: <a href="https://file.pizza/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">file.pizza</a></h4>
+                                    <p className="text-xs text-muted-foreground">
+                                        📤 Files are shared directly between browsers — no server storage.
+                                    </p>
+                                     <p className="text-xs text-muted-foreground">
+                                        ✅ Only upload files you have the right to share.
+                                    </p>
+                                     <p className="text-xs text-muted-foreground">
+                                       🔒 Share download links only with known recipients.
+                                    </p>
+                                     <p className="text-xs text-muted-foreground">
+                                        ⚠️ No illegal or harmful content allowed.
+                                    </p>
+                                </div>
+                           </div>
+                        </PopoverContent>
+                    </Popover>
+                  </div>
                 </DialogHeader>
                 <form onSubmit={handleLinkSend} className="space-y-4">
                   <Input name="linkUrl" placeholder="https://example.com" type="url" required />
