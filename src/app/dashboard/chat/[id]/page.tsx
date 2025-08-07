@@ -10,13 +10,12 @@ import React from 'react';
 
 // The main page component is now responsible for handling params.
 export default function ChatPage({ params }: { params: { id: string } }) {
-  // Although this is a client component, Next.js recommends this pattern
-  // for future compatibility. We can pass the id down.
+  // We extract the id here and pass it down to the client component.
   const id = params.id;
   return <ChatRoom id={id} />;
 }
 
-// A new component to contain the actual chat UI logic.
+// This new component contains the actual chat UI and its logic.
 function ChatRoom({ id }: { id: string }) {
   const { chatroom, loading: chatroomLoading } = useChatroom(id);
   const { messages, loading: messagesLoading } = useMessages(id);
