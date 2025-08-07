@@ -17,6 +17,37 @@ interface ChatMessagesProps {
   loading: boolean;
 }
 
+// Basic regex to check if a string is a URL
+const urlRegex = /^(https?:\/\/[^\s]+)/;
+
+function ChatMessageContent({ message }: { message: Message }) {
+    if (message.type === 'image' && message.image_url) {
+        return (
+            <a href={message.image_url} target="_blank" rel="noopener noreferrer">
+                <Image
+                    src={message.image_url}
+                    alt="User uploaded content"
+                    width={300}
+                    height={300}
+                    className="rounded-md object-cover"
+                    data-ai-hint="user image"
+                />
+            </a>
+        );
+    }
+
+    if (message.text && urlRegex.test(message.text)) {
+        return (
+            <a href={message.text} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                {message.text}
+            </a>
+        );
+    }
+
+    return <p className="whitespace-pre-wrap break-words">{message.text}</p>;
+}
+
+
 export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
@@ -57,20 +88,7 @@ export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
                   )}
                 >
                   {!isCurrentUser && <p className="text-xs font-bold mb-1">{message.sender_name}</p>}
-                  {message.type === 'image' && message.image_url ? (
-                    <a href={message.image_url} target="_blank" rel="noopener noreferrer">
-                      <Image
-                        src={message.image_url}
-                        alt="User uploaded content"
-                        width={300}
-                        height={300}
-                        className="rounded-md object-cover"
-                        data-ai-hint="user image"
-                      />
-                    </a>
-                  ) : (
-                    <p className="whitespace-pre-wrap">{message.text}</p>
-                  )}
+                  <ChatMessageContent message={message} />
                   <p className={cn('text-xs mt-1', isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
                     {format(new Date(message.created_at), 'p')}
                   </p>

@@ -27,6 +27,7 @@ interface ChatInputProps {
 export default function ChatInput({ chatroomId }: ChatInputProps) {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSendMessage = async (messageContent?: { text: string; type: 'text' | 'image'; imageUrl?: string }) => {
@@ -54,9 +55,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
     const linkUrl = formData.get('linkUrl') as string;
     if (linkUrl) {
       handleSendMessage({ text: linkUrl, type: 'text' });
-      // This is a bit of a hack to close the dialog from the form.
-      // A more robust solution might involve controlling the dialog's open state.
-      document.querySelector('[data-radix-dialog-content]')?.parentElement?.querySelector('button[aria-label="Close"]')?.click();
+      setIsLinkDialogOpen(false); // Close the dialog
     }
   };
 
@@ -97,7 +96,7 @@ export default function ChatInput({ chatroomId }: ChatInputProps) {
               </div>
             </PopoverContent>
           </Popover>
-           <Dialog>
+           <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
                   <LinkIcon className="h-4 w-4 md:h-5 md:w-5" />
