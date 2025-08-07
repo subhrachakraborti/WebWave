@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -37,9 +38,9 @@ export function SharePopover({ code }: SharePopoverProps) {
   return (
     <Popover onOpenChange={(open) => open && handleOpen()}>
       <PopoverTrigger asChild>
-        <Button variant="outline">
-          <Share2 className="mr-2 h-4 w-4" />
-          Share
+        <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+          <Share2 className="h-5 w-5 md:mr-2" />
+          <span className="sr-only md:not-sr-only">Share</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
