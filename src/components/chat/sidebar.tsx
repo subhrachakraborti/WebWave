@@ -99,7 +99,7 @@ export default function ChatSidebar() {
           <>
             <div className="flex items-center justify-between">
               <div className='flex items-center gap-2'>
-                <UserAvatar name={user.displayName} imageUrl={user.photoURL} />
+                <UserAvatar name={user.displayName} imageUrl={user.photoURL} userId={user.uid} />
                 <span className="text-sm font-medium truncate">{user.displayName || 'User'}</span>
               </div>
               <TooltipProvider>

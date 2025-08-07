@@ -20,7 +20,7 @@ interface ChatMessagesProps {
 // Basic regex to check if a string is a URL
 const urlRegex = /^(https?:\/\/[^\s]+)/;
 
-function ChatMessageContent({ message }: { message: Message }) {
+function ChatMessageContent({ message, isCurrentUser }: { message: Message, isCurrentUser: boolean }) {
     if (message.type === 'image' && message.image_url) {
         return (
             <a href={message.image_url} target="_blank" rel="noopener noreferrer">
@@ -38,7 +38,15 @@ function ChatMessageContent({ message }: { message: Message }) {
 
     if (message.text && urlRegex.test(message.text)) {
         return (
-            <a href={message.text} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+            <a 
+                href={message.text} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={cn(
+                    "hover:underline break-all",
+                    isCurrentUser ? "text-blue-200" : "text-blue-400"
+                )}
+            >
                 {message.text}
             </a>
         );
@@ -80,7 +88,7 @@ export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
                 key={message.id}
                 className={cn('flex items-end gap-2', isCurrentUser ? 'justify-end' : 'justify-start')}
               >
-                {!isCurrentUser && <UserAvatar name={message.sender_name} />}
+                {!isCurrentUser && <UserAvatar name={message.sender_name} userId={message.sender_id} />}
                 <div
                   className={cn(
                     'max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2',
@@ -88,12 +96,12 @@ export default function ChatMessages({ messages, loading }: ChatMessagesProps) {
                   )}
                 >
                   {!isCurrentUser && <p className="text-xs font-bold mb-1">{message.sender_name}</p>}
-                  <ChatMessageContent message={message} />
+                  <ChatMessageContent message={message} isCurrentUser={!!isCurrentUser} />
                   <p className={cn('text-xs mt-1', isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
                     {format(new Date(message.created_at), 'p')}
                   </p>
                 </div>
-                {isCurrentUser && <UserAvatar name={message.sender_name} />}
+                {isCurrentUser && <UserAvatar name={message.sender_name} userId={message.sender_id} />}
               </div>
             );
           })
