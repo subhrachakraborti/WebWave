@@ -16,6 +16,7 @@ import { auth } from '@/lib/firebase';
 import { createSessionCookie } from '@/lib/actions/auth';
 import { CreateRoomButton } from '@/components/chat/create-room-button';
 import { Separator } from '@/components/ui/separator';
+import AnimatedBackground from '@/components/animated-background';
 
 export default function LoginPage() {
   const { user, loading: authLoading } = useAuth();
@@ -61,30 +62,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6 p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background overflow-hidden">
+        <AnimatedBackground />
+      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6 p-4 rounded-lg bg-background/80 backdrop-blur-sm border">
         <div className="flex flex-col items-center space-y-2 text-center">
             <Logo className="h-20 w-20 text-primary" />
           <h1 className="text-3xl font-bold">Welcome to WebWave</h1>
           <p className="text-muted-foreground">
-            Create a temporary chatroom or log in to your account.
+          Log in to your SubhraVerse account to continue.
           </p>
-        </div>
-        
-        <div className="w-full space-y-4">
-            <CreateRoomButton />
-        </div>
-        
-        <div className="flex w-full items-center gap-4">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <Separator className="flex-1" />
         </div>
 
         <form onSubmit={handleLogin} className="w-full space-y-4">
-          <p className="text-sm text-center font-medium text-muted-foreground">
-            Log in to manage your chatrooms.
-          </p>
           <div>
             <Label htmlFor="email">Email</Label>
             <Input 
@@ -113,7 +102,8 @@ export default function LoginPage() {
           </Button>
         </form>
          <p className="px-8 text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
+          Don't have a SubhraVerse account?{' '}
+          <br />
           <Link href="https://user.subhrachakraborti.com" target="_blank" className="underline underline-offset-4 hover:text-primary">
             Sign up
           </Link>
