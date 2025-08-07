@@ -1,6 +1,6 @@
 'use client';
 
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/hooks/use-sidebar-provider';
 import { cn } from '@/lib/utils';
 import React from 'react';
@@ -25,7 +25,10 @@ const Sidebar = React.forwardRef<
       </aside>
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent side="left" className="w-full max-w-xs p-0">
-            {children}
+          <SheetHeader>
+            <SheetTitle className="sr-only">Sidebar</SheetTitle>
+          </SheetHeader>
+          {children}
         </SheetContent>
       </Sheet>
     </>
@@ -33,6 +36,5 @@ const Sidebar = React.forwardRef<
 });
 
 Sidebar.displayName = 'Sidebar';
-
 
 export { Sidebar };
