@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useChatroom, useMessages } from '@/hooks/use-chat';
@@ -5,11 +6,21 @@ import ChatHeader from '@/components/chat/chat-header';
 import ChatMessages from '@/components/chat/chat-messages';
 import ChatInput from '@/components/chat/chat-input';
 import { Loader2 } from 'lucide-react';
+import React from 'react';
 
+// The main page component is now responsible for handling params.
 export default function ChatPage({ params }: { params: { id: string } }) {
-  const { chatroom, loading: chatroomLoading } = useChatroom(params.id);
-  const { messages, loading: messagesLoading } = useMessages(params.id);
-  
+  // Although this is a client component, Next.js recommends this pattern
+  // for future compatibility. We can pass the id down.
+  const id = params.id;
+  return <ChatRoom id={id} />;
+}
+
+// A new component to contain the actual chat UI logic.
+function ChatRoom({ id }: { id: string }) {
+  const { chatroom, loading: chatroomLoading } = useChatroom(id);
+  const { messages, loading: messagesLoading } = useMessages(id);
+
   const isLoading = chatroomLoading;
 
   if (isLoading) {
@@ -24,16 +35,18 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
         <h2 className="text-2xl font-bold">Chat Not Found</h2>
-        <p className="text-muted-foreground">This chat may have expired or does not exist.</p>
+        <p className="text-muted-foreground">
+          This chat may have expired or does not exist.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-screen flex-col">
       <ChatHeader chatroom={chatroom} />
       <ChatMessages messages={messages} loading={messagesLoading} />
-      <ChatInput chatroomId={params.id} />
+      <ChatInput chatroomId={id} />
     </div>
   );
 }
