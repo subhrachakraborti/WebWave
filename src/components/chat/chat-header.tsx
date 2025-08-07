@@ -70,10 +70,10 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 border-b bg-secondary/40">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-bold">{chatroom.name}</h2>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+    <header className="flex flex-wrap items-center justify-between gap-y-2 p-4 border-b bg-secondary/40">
+      <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+        <h2 className="text-lg font-bold truncate">{chatroom.name}</h2>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <div className="flex items-center">
                 <Users className="h-4 w-4 mr-1" />
                 <span>{memberCount} / 7 members</span>
@@ -86,7 +86,7 @@ export default function ChatHeader({ chatroom }: ChatHeaderProps) {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <SharePopover code={chatroom.code} />
         {isCreator && (
           <AlertDialog>
